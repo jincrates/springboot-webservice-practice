@@ -1,9 +1,13 @@
 package com.jincrates.book.springboot.web;
 
+import com.jincrates.book.springboot.config.auth.SecurityConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,8 +27,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //    - 단, @Service, @Component, @Repository 등은 사용할 수 없음
 //    - 여기서는 컨트롤러만 사용하기 때문에 선언함
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = HelloController.class)
-public class HelloControllerTest {
+@WebMvcTest(controllers = HelloController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)
+        }
+)public class HelloControllerTest {
 
     // 3) @Autowired
     //    - 스프링이 관리하는 빈(Bean)을 주입받음
@@ -36,6 +43,7 @@ public class HelloControllerTest {
     private MockMvc mvc;
 
     @Test
+    @WithMockUser(roles="USER")
     public void hello가_리턴된다() throws Exception {
         String hello = "hello";
 
@@ -64,6 +72,7 @@ public class HelloControllerTest {
     //    - JSON 응답값ㅇ르 필드별로 검증할 수 있는 메소드
     //    - $를 기준으로 필드명을 명시
     //    - 여기서는 name과 amount를 검증하니 $.name, $.amount로 검증함
+    @WithMockUser(roles="USER")
     @Test
     public void helloDto가_리턴된다() throws Exception {
         String name = "hello";
@@ -75,6 +84,7 @@ public class HelloControllerTest {
                         .param("amount", String.valueOf(amount)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(name)))
-                .andExpect(jsonPath("$amount", is(amount)));
+                .andExpect(jsonPath("$.amount", is(amount)));
     }
+
 }
